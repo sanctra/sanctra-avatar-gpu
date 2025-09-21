@@ -1,0 +1,29 @@
+﻿FROM nvidia/cuda:12.1.0-runtime-ubuntu22.04
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git ffmpeg python3 python3-pip python3-dev build-essential ca-certificates wget libgl1 && \
+    rm -rf /var/lib/apt/lists/*
+
+# Torch with CUDA 12.1
+RUN pip3 install --no-cache-dir --upgrade pip && \
+    pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+
+# Core Python deps for service and media
+RUN pip3 install --no-cache-dir \
+    fastapi uvicorn[standard] pydantic \
+    google-cloud-storage gcsfs \
+    numpy opencv-python-headless pillow imageio
+
+# (Optional) Clone SadTalker (commented by default; enable when you add checkpoints)
+# RUN git clone https://github.com/OpenTalker/SadTalker.git /opt/SadTalker && \
+#     pip3 install --no-cache-dir -r /opt/SadTalker/requirements.txt
+
+WORKDIR /srv
+COPY server ./server
+
+EXPOSE 9100
+CMD [""python3"", ""-m"", ""uvicorn"", ""server.main:app"", ""--host"", ""0.0.0.0"", ""--port"", ""9100""]
