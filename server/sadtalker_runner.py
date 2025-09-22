@@ -2,6 +2,17 @@
 from urllib.parse import urlparse
 from google.cloud import storage
 
+# server/main.py
+from fastapi import FastAPI
+from .sadtalker_runner import render_talking_head
+
+app = FastAPI()
+
+@app.get("/healthz")
+async def healthz():
+    return "ok"
+
+
 RES_MAP = {"720p": (1280,720), "1080p": (1920,1080)}
 _bucket_client = storage.Client()
 
